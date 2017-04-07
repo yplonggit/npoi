@@ -73,6 +73,13 @@ namespace NPOI.SS.UserModel
         /// <summary>
         /// Set the cells type (numeric, formula or string)
         /// </summary>
+        /// <p>If the cell currently contains a value, the value will
+        /// be converted to match the new type, if possible. Formatting
+        /// is generally lost in the process however.</p>
+        /// <p>If what you want to do is get a String value for your
+        /// numeric cell, <i>stop!</i>. This is not the way to do it.
+        /// Instead, for fetching the string value of a numeric or boolean
+        /// or date cell, use {@link DataFormatter} instead.</p> 
         CellType CellType
         {
             get;
@@ -223,6 +230,11 @@ namespace NPOI.SS.UserModel
         IHyperlink Hyperlink { get; set; }
 
         /// <summary>
+        /// Removes the hyperlink for this cell, if there is one.
+        /// </summary>
+        void RemoveHyperlink();
+
+        /// <summary>
         ///  Only valid for array formula cells
         /// </summary>
         /// <returns>range of the array formula group that the cell belongs to.</returns>
@@ -234,6 +246,8 @@ namespace NPOI.SS.UserModel
         bool IsPartOfArrayFormulaGroup { get; }
 
         bool IsMergedCell { get; }
+        
+        CellType GetCachedFormulaResultTypeEnum();
     }
 }
 

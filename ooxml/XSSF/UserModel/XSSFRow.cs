@@ -112,7 +112,7 @@ namespace NPOI.XSSF.UserModel
          *
          * @return an iterator over cells in this row.
          */
-        public IEnumerator GetEnumerator()
+        public IEnumerator<ICell> GetEnumerator()
         {
             return CellIterator();
         }
@@ -637,6 +637,49 @@ namespace NPOI.XSSF.UserModel
             return CellUtil.CopyCell(this, sourceIndex, targetIndex);
         }
 
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public bool HasCustomHeight()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int OutlineLevel
+        {
+            get
+            {
+                return _row.outlineLevel;
+            }
+        }
+
+        public bool? Hidden
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public bool? Collapsed
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
         #endregion
     }
 

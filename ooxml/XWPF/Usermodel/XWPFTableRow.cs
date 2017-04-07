@@ -22,8 +22,9 @@ namespace NPOI.XWPF.UserModel
 
 
     /**
-     * @author gisellabronzetti
-     * @author gregg morris - added removeCell(), setCantSplitRow(), setRepeatHeader()
+     * A row within an {@link XWPFTable}. Rows mostly just have
+     *  sizings and stylings, the interesting content lives inside
+     *  the child {@link XWPFTableCell}s
      */
     public class XWPFTableRow
     {
@@ -145,6 +146,32 @@ namespace NPOI.XWPF.UserModel
         }
 
         /**
+     * create and return a list of all XWPFTableCell
+     * who belongs to this row
+     * @return a list of {@link XWPFTableCell} 
+     */
+        public List<ICell> GetTableICells()
+        {
+
+            List<ICell> cells = new List<ICell>();
+            //Can't use ctRow.getTcList because that only gets table cells
+            //Can't use ctRow.getSdtList because that only gets sdts that are at cell level
+
+            foreach(object o in ctRow.Items)
+            {
+                if (o is CT_Tc)
+                {
+                    cells.Add(new XWPFTableCell((CT_Tc)o, this, table.Body));
+                }
+                else if (o is CT_SdtCell)
+                {
+                    cells.Add(new XWPFSDTCell((CT_SdtCell)o, this, table.Body));
+                }
+            }
+            return cells;
+        }
+
+        /**
          * create and return a list of all XWPFTableCell
          * who belongs to this row
          * @return a list of {@link XWPFTableCell} 
@@ -158,6 +185,11 @@ namespace NPOI.XWPF.UserModel
                 {
                     cells.Add(new XWPFTableCell(tableCell, this, table.Body));
                 }
+
+                //TODO: it is possible to have an SDT that contains a cell in within a row
+                //need to modify this code so that it pulls out SDT wrappers around cells, too.
+
+
                 this.tableCells = cells;
             }
             return tableCells;

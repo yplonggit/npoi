@@ -37,8 +37,11 @@ namespace NPOI.OpenXmlFormats.Spreadsheet
         {
             sw.Write(string.Format("<{0}>", nodeName));
             if (this.t != null)
-                sw.Write(string.Format("<t xml:space=\"preserve\">{0}</t>",XmlHelper.ExcelEncodeString(XmlHelper.EncodeXml(t))));
-
+            {
+                //TODO: diff has-space case and no-space case
+                 sw.Write(string.Format("<t xml:space=\"preserve\">{0}</t>", 
+                      XmlHelper.ExcelEncodeString(XmlHelper.EncodeXml(t))));
+            }
             if (this.r != null)
             {
                 foreach (CT_RElt x in this.r)
@@ -159,7 +162,10 @@ namespace NPOI.OpenXmlFormats.Spreadsheet
                             }
                             if (r.t != null)
                             {
-                                sw.Write("<t xml:space=\"preserve\">");
+                                sw.Write("<t");
+                                if(r.t.IndexOf(' ')>=0)
+                                    sw.Write(" xml:space=\"preserve\"");
+                                sw.Write(">");
                                 sw.Write(XmlHelper.EncodeXml(r.t));
                                 sw.Write("</t>");
                             }
@@ -169,7 +175,10 @@ namespace NPOI.OpenXmlFormats.Spreadsheet
 
                     if (this.t != null)
                     {
-                        sw.Write("<t>");
+                        sw.Write("<t");
+                        if (this.t.IndexOf(' ') >= 0)
+                            sw.Write(" xml:space=\"preserve\"");
+                        sw.Write(">");
                         sw.Write(XmlHelper.EncodeXml(this.t));
                         sw.Write("</t>");
                     }
@@ -245,6 +254,11 @@ namespace NPOI.OpenXmlFormats.Spreadsheet
                     ctObj.t = childNode.InnerText.Replace("\r", "");
             }
             return ctObj;
+        }
+
+        public int SizeOfRArray()
+        {
+            return r.Count;
         }
     }
 }

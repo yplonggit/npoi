@@ -22,6 +22,7 @@ using NPOI.SS.UserModel;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.Formula.Eval;
 using NPOI.SS.Formula.Udf;
+using System.Collections.Generic;
 namespace NPOI.XSSF.UserModel
 {
 
@@ -35,7 +36,7 @@ namespace NPOI.XSSF.UserModel
      * @author Amol S. Deshmukh &lt; amolweb at ya hoo dot com &gt;
      * @author Josh Micich
      */
-    public class XSSFFormulaEvaluator : IFormulaEvaluator
+    public class XSSFFormulaEvaluator : IFormulaEvaluator, IWorkbookEvaluatorProvider
     {
 
         private WorkbookEvaluator _bookEvaluator;
@@ -47,6 +48,13 @@ namespace NPOI.XSSF.UserModel
         public XSSFFormulaEvaluator(XSSFWorkbook workbook)
             : this(workbook, null, null)
         { }
+
+        //TODO; will need testing added for streaming
+        public XSSFFormulaEvaluator(WorkbookEvaluator bookEvaluator)
+        {
+            _bookEvaluator = bookEvaluator;
+        }
+
 
         /**
          * @param stabilityClassifier used to optimise caching performance. Pass <code>null</code>
@@ -65,6 +73,8 @@ namespace NPOI.XSSF.UserModel
             _bookEvaluator = new WorkbookEvaluator(XSSFEvaluationWorkbook.Create(workbook), stabilityClassifier, udfFinder);
             _book = workbook;
         }
+
+
 
         /**
          * @param stabilityClassifier used to optimise caching performance. Pass <code>null</code>
@@ -305,6 +315,28 @@ namespace NPOI.XSSF.UserModel
                 return CellValue.GetError(((ErrorEval)eval).ErrorCode);
             }
             throw new Exception("Unexpected eval class (" + eval.GetType().Name + ")");
+        }
+
+        public void SetupReferencedWorkbooks(Dictionary<String, IFormulaEvaluator> evaluators)
+        {
+            CollaboratingWorkbooksEnvironment.SetupFormulaEvaluator(evaluators);
+        }
+
+        public WorkbookEvaluator GetWorkbookEvaluator()
+        {
+            return _bookEvaluator;
+        }
+
+        public bool IgnoreMissingWorkbooks
+        {
+            get
+            {
+                return _bookEvaluator.IgnoreMissingWorkbooks;
+            }
+            set
+            {
+                _bookEvaluator.IgnoreMissingWorkbooks = value;
+            }
         }
         public bool DebugEvaluationOutputForNextEval
         {

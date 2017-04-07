@@ -32,10 +32,8 @@ namespace NPOI.HSSF.UserModel
     /// @author Glen Stampoultzis (glens at apache.org)
     /// </summary>
     [Serializable]
-    public class HSSFRow : IComparable,IRow
+    public class HSSFRow : IComparable, IRow
     {
-
-
         /// <summary>
         /// used for collections
         /// </summary>
@@ -715,6 +713,32 @@ namespace NPOI.HSSF.UserModel
             }
         }
 
+        public bool? Hidden
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public bool? Collapsed
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         /// <summary>
         /// Gets the cell enumerator of the physically defined cells.
         /// </summary>
@@ -723,7 +747,7 @@ namespace NPOI.HSSF.UserModel
         /// will not return Un-defined (null) cells.
         /// Call CellNum on the returned cells to know which cell they are.
         /// </remarks>
-        public IEnumerator GetEnumerator()
+        public IEnumerator<ICell> GetEnumerator()
         {
             //return //new CellEnumerator(this.cells);
             return this.cells.Values.GetEnumerator();
@@ -865,6 +889,16 @@ namespace NPOI.HSSF.UserModel
         public override int GetHashCode ()
         {
             return RowNum;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public bool HasCustomHeight()
+        {
+            throw new NotImplementedException();
         }
     }
 }

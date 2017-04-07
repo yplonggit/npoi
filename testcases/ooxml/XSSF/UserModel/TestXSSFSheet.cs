@@ -163,40 +163,7 @@ namespace NPOI.XSSF.UserModel
             Assert.IsTrue(col.bestFit);
         }
 
-        /**
-         * XSSFSheet autoSizeColumn() on empty RichTextString fails
-         */
-        [Test]
-        public void Test48325()
-        {
-            XSSFWorkbook wb = new XSSFWorkbook();
-            ISheet sheet = wb.CreateSheet("Test");
-            ICreationHelper factory = wb.GetCreationHelper();
-
-            IRow row = sheet.CreateRow(0);
-            ICell cell = row.CreateCell(0);
-
-            IFont font = wb.CreateFont();
-            IRichTextString rts = factory.CreateRichTextString("");
-            rts.ApplyFont(font);
-            cell.SetCellValue(rts);
-
-            sheet.AutoSizeColumn(0);
-        }
-        [Test]
-        public void TestGetCellComment()
-        {
-            XSSFWorkbook workbook = new XSSFWorkbook();
-            ISheet sheet = workbook.CreateSheet();
-            IDrawing dg = sheet.CreateDrawingPatriarch();
-            IComment comment = dg.CreateCellComment(new XSSFClientAnchor());
-            ICell cell = sheet.CreateRow(9).CreateCell(2);
-            comment.Author = ("test C10 author");
-            cell.CellComment = (comment);
-
-            Assert.IsNotNull(sheet.GetCellComment(9, 2));
-            Assert.AreEqual("test C10 author", sheet.GetCellComment(9, 2).Author);
-        }
+        
         [Test]
         public void TestSetCellComment()
         {
@@ -237,22 +204,13 @@ namespace NPOI.XSSF.UserModel
             Assert.AreEqual(ST_Pane.bottomRight, ctWorksheet.sheetViews.GetSheetViewArray(0).pane.activePane);
             sheet.CreateFreezePane(3, 6, 10, 10);
             Assert.AreEqual(3.0, ctWorksheet.sheetViews.GetSheetViewArray(0).pane.xSplit);
-            Assert.AreEqual(10, sheet.TopRow);
-            Assert.AreEqual(10, sheet.LeftCol);
+            //Assert.AreEqual(10, sheet.TopRow);
+            //Assert.AreEqual(10, sheet.LeftCol);
             sheet.CreateSplitPane(4, 8, 12, 12, PanePosition.LowerRight);
             Assert.AreEqual(8.0, ctWorksheet.sheetViews.GetSheetViewArray(0).pane.ySplit);
             Assert.AreEqual(ST_Pane.bottomRight, ctWorksheet.sheetViews.GetSheetViewArray(0).pane.activePane);
         }
-        [Test]
-        public void TestNewMergedRegionAt()
-        {
-            XSSFWorkbook workbook = new XSSFWorkbook();
-            XSSFSheet sheet = (XSSFSheet)workbook.CreateSheet();
-            CellRangeAddress region = CellRangeAddress.ValueOf("B2:D4");
-            sheet.AddMergedRegion(region);
-            Assert.AreEqual("B2:D4", sheet.GetMergedRegion(0).FormatAsString());
-            Assert.AreEqual(1, sheet.NumMergedRegions);
-        }
+
         [Test]
         public void TestRemoveMergedRegion_lowlevel()
         {
@@ -313,17 +271,18 @@ namespace NPOI.XSSF.UserModel
             sheet.GroupColumn(10, 11);
             CT_Cols cols = sheet.GetCTWorksheet().GetColsArray(0);
             Assert.AreEqual(2, cols.sizeOfColArray());
-            List<CT_Col> colArray = cols.GetColArray();
+            List<CT_Col> colArray = cols.GetColList();
             Assert.IsNotNull(colArray);
             Assert.AreEqual((uint)(2 + 1), colArray[0].min); // 1 based
             Assert.AreEqual((uint)(7 + 1), colArray[0].max); // 1 based
             Assert.AreEqual(1, colArray[0].outlineLevel);
+            Assert.AreEqual(0, sheet.GetColumnOutlineLevel(0));
 
             //two level
             sheet.GroupColumn(1, 2);
             cols = sheet.GetCTWorksheet().GetColsArray(0);
             Assert.AreEqual(4, cols.sizeOfColArray());
-            colArray = cols.GetColArray();
+            colArray = cols.GetColList();
             Assert.AreEqual(2, colArray[1].outlineLevel);
 
             //three level
@@ -331,17 +290,17 @@ namespace NPOI.XSSF.UserModel
             sheet.GroupColumn(2, 3);
             cols = sheet.GetCTWorksheet().GetColsArray(0);
             Assert.AreEqual(7, cols.sizeOfColArray());
-            colArray = cols.GetColArray();
+            colArray = cols.GetColList();
             Assert.AreEqual(3, colArray[1].outlineLevel);
             Assert.AreEqual(3, sheet.GetCTWorksheet().sheetFormatPr.outlineLevelCol);
 
             sheet.UngroupColumn(8, 10);
-            colArray = cols.GetColArray();
+            colArray = cols.GetColList();
             //Assert.AreEqual(3, colArray[1].outlineLevel);
 
             sheet.UngroupColumn(4, 6);
             sheet.UngroupColumn(2, 2);
-            colArray = cols.GetColArray();
+            colArray = cols.GetColList();
             Assert.AreEqual(4, colArray.Count);
             Assert.AreEqual(2, sheet.GetCTWorksheet().sheetFormatPr.outlineLevelCol);
         }
@@ -427,32 +386,32 @@ namespace NPOI.XSSF.UserModel
 
             Assert.AreEqual(false, cols.GetColArray(0).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(0).IsSetCollapsed());
-            Assert.AreEqual(5u, cols.GetColArray(0).min); // 1 based
-            Assert.AreEqual(8u, cols.GetColArray(0).max); // 1 based
+            Assert.AreEqual(5, cols.GetColArray(0).min); // 1 based
+            Assert.AreEqual(8, cols.GetColArray(0).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(1).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(1).IsSetCollapsed());
-            Assert.AreEqual(10u, cols.GetColArray(1).min); // 1 based
-            Assert.AreEqual(13u, cols.GetColArray(1).max); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(1).min); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(1).max); // 1 based
 
             sheet1.GroupColumn((short)10, (short)11);
             Assert.AreEqual(4, cols.sizeOfColArray());
 
             Assert.AreEqual(false, cols.GetColArray(0).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(0).IsSetCollapsed());
-            Assert.AreEqual(5u, cols.GetColArray(0).min); // 1 based
-            Assert.AreEqual(8u, cols.GetColArray(0).max); // 1 based
+            Assert.AreEqual(5, cols.GetColArray(0).min); // 1 based
+            Assert.AreEqual(8, cols.GetColArray(0).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(1).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(1).IsSetCollapsed());
-            Assert.AreEqual(10u, cols.GetColArray(1).min); // 1 based
-            Assert.AreEqual(10u, cols.GetColArray(1).max); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(1).min); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(1).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(2).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(2).IsSetCollapsed());
-            Assert.AreEqual(11u, cols.GetColArray(2).min); // 1 based
-            Assert.AreEqual(12u, cols.GetColArray(2).max); // 1 based
+            Assert.AreEqual(11, cols.GetColArray(2).min); // 1 based
+            Assert.AreEqual(12, cols.GetColArray(2).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(3).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(3).IsSetCollapsed());
-            Assert.AreEqual(13u, cols.GetColArray(3).min); // 1 based
-            Assert.AreEqual(13u, cols.GetColArray(3).max); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(3).min); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(3).max); // 1 based
 
             // collapse columns - 1
             sheet1.SetColumnGroupCollapsed((short)5, true);
@@ -460,24 +419,24 @@ namespace NPOI.XSSF.UserModel
 
             Assert.AreEqual(true, cols.GetColArray(0).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(0).IsSetCollapsed());
-            Assert.AreEqual(5u, cols.GetColArray(0).min); // 1 based
-            Assert.AreEqual(8u, cols.GetColArray(0).max); // 1 based
+            Assert.AreEqual(5, cols.GetColArray(0).min); // 1 based
+            Assert.AreEqual(8, cols.GetColArray(0).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(1).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(1).IsSetCollapsed());
-            Assert.AreEqual(9u, cols.GetColArray(1).min); // 1 based
-            Assert.AreEqual(9u, cols.GetColArray(1).max); // 1 based
+            Assert.AreEqual(9, cols.GetColArray(1).min); // 1 based
+            Assert.AreEqual(9, cols.GetColArray(1).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(2).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(2).IsSetCollapsed());
-            Assert.AreEqual(10u, cols.GetColArray(2).min); // 1 based
-            Assert.AreEqual(10u, cols.GetColArray(2).max); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).min); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(3).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(3).IsSetCollapsed());
-            Assert.AreEqual(11u, cols.GetColArray(3).min); // 1 based
-            Assert.AreEqual(12u, cols.GetColArray(3).max); // 1 based
+            Assert.AreEqual(11, cols.GetColArray(3).min); // 1 based
+            Assert.AreEqual(12, cols.GetColArray(3).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(4).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(4).IsSetCollapsed());
-            Assert.AreEqual(13u, cols.GetColArray(4).min); // 1 based
-            Assert.AreEqual(13u, cols.GetColArray(4).max); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).min); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).max); // 1 based
 
 
             // expand columns - 1
@@ -485,24 +444,24 @@ namespace NPOI.XSSF.UserModel
 
             Assert.AreEqual(false, cols.GetColArray(0).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(0).IsSetCollapsed());
-            Assert.AreEqual(5u, cols.GetColArray(0).min); // 1 based
-            Assert.AreEqual(8u, cols.GetColArray(0).max); // 1 based
+            Assert.AreEqual(5, cols.GetColArray(0).min); // 1 based
+            Assert.AreEqual(8, cols.GetColArray(0).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(1).IsSetHidden());
             Assert.AreEqual(false, cols.GetColArray(1).IsSetCollapsed());
-            Assert.AreEqual(9u, cols.GetColArray(1).min); // 1 based
-            Assert.AreEqual(9u, cols.GetColArray(1).max); // 1 based
+            Assert.AreEqual(9, cols.GetColArray(1).min); // 1 based
+            Assert.AreEqual(9, cols.GetColArray(1).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(2).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(2).IsSetCollapsed());
-            Assert.AreEqual(10u, cols.GetColArray(2).min); // 1 based
-            Assert.AreEqual(10u, cols.GetColArray(2).max); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).min); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(3).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(3).IsSetCollapsed());
-            Assert.AreEqual(11u, cols.GetColArray(3).min); // 1 based
-            Assert.AreEqual(12u, cols.GetColArray(3).max); // 1 based
+            Assert.AreEqual(11, cols.GetColArray(3).min); // 1 based
+            Assert.AreEqual(12, cols.GetColArray(3).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(4).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(4).IsSetCollapsed());
-            Assert.AreEqual(13u, cols.GetColArray(4).min); // 1 based
-            Assert.AreEqual(13u, cols.GetColArray(4).max); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).min); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).max); // 1 based
 
 
             //collapse - 2
@@ -510,34 +469,34 @@ namespace NPOI.XSSF.UserModel
             Assert.AreEqual(6, cols.sizeOfColArray());
             Assert.AreEqual(false, cols.GetColArray(0).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(0).IsSetCollapsed());
-            Assert.AreEqual(5u, cols.GetColArray(0).min); // 1 based
-            Assert.AreEqual(8u, cols.GetColArray(0).max); // 1 based
+            Assert.AreEqual(5, cols.GetColArray(0).min); // 1 based
+            Assert.AreEqual(8, cols.GetColArray(0).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(1).IsSetHidden());
-            Assert.AreEqual(false, cols.GetColArray(1).IsSetCollapsed());
-            Assert.AreEqual(9u, cols.GetColArray(1).min); // 1 based
-            Assert.AreEqual(9u, cols.GetColArray(1).max); // 1 based
+            Assert.AreEqual(true, cols.GetColArray(1).IsSetCollapsed());
+            Assert.AreEqual(9, cols.GetColArray(1).min); // 1 based
+            Assert.AreEqual(9, cols.GetColArray(1).max); // 1 based
             Assert.AreEqual(true, cols.GetColArray(2).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(2).IsSetCollapsed());
-            Assert.AreEqual(10u, cols.GetColArray(2).min); // 1 based
-            Assert.AreEqual(10u, cols.GetColArray(2).max); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).min); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).max); // 1 based
             Assert.AreEqual(true, cols.GetColArray(3).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(3).IsSetCollapsed());
-            Assert.AreEqual(11u, cols.GetColArray(3).min); // 1 based
-            Assert.AreEqual(12u, cols.GetColArray(3).max); // 1 based
+            Assert.AreEqual(11, cols.GetColArray(3).min); // 1 based
+            Assert.AreEqual(12, cols.GetColArray(3).max); // 1 based
             Assert.AreEqual(true, cols.GetColArray(4).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(4).IsSetCollapsed());
-            Assert.AreEqual(13u, cols.GetColArray(4).min); // 1 based
-            Assert.AreEqual(13u, cols.GetColArray(4).max); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).min); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(5).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(5).IsSetCollapsed());
-            Assert.AreEqual(14u, cols.GetColArray(5).min); // 1 based
-            Assert.AreEqual(14u, cols.GetColArray(5).max); // 1 based
+            Assert.AreEqual(14, cols.GetColArray(5).min); // 1 based
+            Assert.AreEqual(14, cols.GetColArray(5).max); // 1 based
 
 
             //expand - 2
             sheet1.SetColumnGroupCollapsed((short)9, false);
             Assert.AreEqual(6, cols.sizeOfColArray());
-            Assert.AreEqual(14u, cols.GetColArray(5).min);
+            Assert.AreEqual(14, cols.GetColArray(5).min);
 
             //outline level 2: the line under ==> collapsed==True
             Assert.AreEqual(2, cols.GetColArray(3).outlineLevel);
@@ -545,28 +504,28 @@ namespace NPOI.XSSF.UserModel
 
             Assert.AreEqual(false, cols.GetColArray(0).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(0).IsSetCollapsed());
-            Assert.AreEqual(5u, cols.GetColArray(0).min); // 1 based
-            Assert.AreEqual(8u, cols.GetColArray(0).max); // 1 based
+            Assert.AreEqual(5, cols.GetColArray(0).min); // 1 based
+            Assert.AreEqual(8, cols.GetColArray(0).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(1).IsSetHidden());
-            Assert.AreEqual(false, cols.GetColArray(1).IsSetCollapsed());
-            Assert.AreEqual(9u, cols.GetColArray(1).min); // 1 based
-            Assert.AreEqual(9u, cols.GetColArray(1).max); // 1 based
+            Assert.AreEqual(true, cols.GetColArray(1).IsSetCollapsed());
+            Assert.AreEqual(9, cols.GetColArray(1).min); // 1 based
+            Assert.AreEqual(9, cols.GetColArray(1).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(2).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(2).IsSetCollapsed());
-            Assert.AreEqual(10u, cols.GetColArray(2).min); // 1 based
-            Assert.AreEqual(10u, cols.GetColArray(2).max); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).min); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).max); // 1 based
             Assert.AreEqual(true, cols.GetColArray(3).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(3).IsSetCollapsed());
-            Assert.AreEqual(11u, cols.GetColArray(3).min); // 1 based
-            Assert.AreEqual(12u, cols.GetColArray(3).max); // 1 based
+            Assert.AreEqual(11, cols.GetColArray(3).min); // 1 based
+            Assert.AreEqual(12, cols.GetColArray(3).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(4).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(4).IsSetCollapsed());
-            Assert.AreEqual(13u, cols.GetColArray(4).min); // 1 based
-            Assert.AreEqual(13u, cols.GetColArray(4).max); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).min); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(5).IsSetHidden());
             Assert.AreEqual(false, cols.GetColArray(5).IsSetCollapsed());
-            Assert.AreEqual(14u, cols.GetColArray(5).min); // 1 based
-            Assert.AreEqual(14u, cols.GetColArray(5).max); // 1 based
+            Assert.AreEqual(14, cols.GetColArray(5).min); // 1 based
+            Assert.AreEqual(14, cols.GetColArray(5).max); // 1 based
 
             //DOCUMENTARE MEGLIO IL DISCORSO DEL LIVELLO
             //collapse - 3
@@ -574,28 +533,28 @@ namespace NPOI.XSSF.UserModel
             Assert.AreEqual(6, cols.sizeOfColArray());
             Assert.AreEqual(false, cols.GetColArray(0).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(0).IsSetCollapsed());
-            Assert.AreEqual(5u, cols.GetColArray(0).min); // 1 based
-            Assert.AreEqual(8u, cols.GetColArray(0).max); // 1 based
+            Assert.AreEqual(5, cols.GetColArray(0).min); // 1 based
+            Assert.AreEqual(8, cols.GetColArray(0).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(1).IsSetHidden());
-            Assert.AreEqual(false, cols.GetColArray(1).IsSetCollapsed());
-            Assert.AreEqual(9u, cols.GetColArray(1).min); // 1 based
-            Assert.AreEqual(9u, cols.GetColArray(1).max); // 1 based
+            Assert.AreEqual(true, cols.GetColArray(1).IsSetCollapsed());
+            Assert.AreEqual(9, cols.GetColArray(1).min); // 1 based
+            Assert.AreEqual(9, cols.GetColArray(1).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(2).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(2).IsSetCollapsed());
-            Assert.AreEqual(10u, cols.GetColArray(2).min); // 1 based
-            Assert.AreEqual(10u, cols.GetColArray(2).max); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).min); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).max); // 1 based
             Assert.AreEqual(true, cols.GetColArray(3).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(3).IsSetCollapsed());
-            Assert.AreEqual(11u, cols.GetColArray(3).min); // 1 based
-            Assert.AreEqual(12u, cols.GetColArray(3).max); // 1 based
+            Assert.AreEqual(11, cols.GetColArray(3).min); // 1 based
+            Assert.AreEqual(12, cols.GetColArray(3).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(4).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(4).IsSetCollapsed());
-            Assert.AreEqual(13u, cols.GetColArray(4).min); // 1 based
-            Assert.AreEqual(13u, cols.GetColArray(4).max); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).min); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(5).IsSetHidden());
             Assert.AreEqual(false, cols.GetColArray(5).IsSetCollapsed());
-            Assert.AreEqual(14u, cols.GetColArray(5).min); // 1 based
-            Assert.AreEqual(14u, cols.GetColArray(5).max); // 1 based
+            Assert.AreEqual(14, cols.GetColArray(5).min); // 1 based
+            Assert.AreEqual(14, cols.GetColArray(5).max); // 1 based
 
 
             //expand - 3
@@ -613,28 +572,29 @@ namespace NPOI.XSSF.UserModel
 
             Assert.AreEqual(false, cols.GetColArray(0).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(0).IsSetCollapsed());
-            Assert.AreEqual(5u, cols.GetColArray(0).min); // 1 based
-            Assert.AreEqual(8u, cols.GetColArray(0).max); // 1 based
+            Assert.AreEqual(5, cols.GetColArray(0).min); // 1 based
+            Assert.AreEqual(8, cols.GetColArray(0).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(1).IsSetHidden());
-            Assert.AreEqual(false, cols.GetColArray(1).IsSetCollapsed());
-            Assert.AreEqual(9u, cols.GetColArray(1).min); // 1 based
-            Assert.AreEqual(9u, cols.GetColArray(1).max); // 1 based
+            Assert.AreEqual(true, cols.GetColArray(1).IsSetCollapsed());
+            Assert.AreEqual(9, cols.GetColArray(1).min); // 1 based
+            Assert.AreEqual(9, cols.GetColArray(1).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(2).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(2).IsSetCollapsed());
-            Assert.AreEqual(10u, cols.GetColArray(2).min); // 1 based
-            Assert.AreEqual(10u, cols.GetColArray(2).max); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).min); // 1 based
+            Assert.AreEqual(10, cols.GetColArray(2).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(3).IsSetHidden());
             Assert.AreEqual(true, cols.GetColArray(3).IsSetCollapsed());
-            Assert.AreEqual(11u, cols.GetColArray(3).min); // 1 based
-            Assert.AreEqual(12u, cols.GetColArray(3).max); // 1 based
+            Assert.AreEqual(11, cols.GetColArray(3).min); // 1 based
+            Assert.AreEqual(12, cols.GetColArray(3).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(4).IsSetHidden());
             Assert.AreEqual(false, cols.GetColArray(4).IsSetCollapsed());
-            Assert.AreEqual(13u, cols.GetColArray(4).min); // 1 based
-            Assert.AreEqual(13u, cols.GetColArray(4).max); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).min); // 1 based
+            Assert.AreEqual(13, cols.GetColArray(4).max); // 1 based
             Assert.AreEqual(false, cols.GetColArray(5).IsSetHidden());
             Assert.AreEqual(false, cols.GetColArray(5).IsSetCollapsed());
-            Assert.AreEqual(14u, cols.GetColArray(5).min); // 1 based
-            Assert.AreEqual(14u, cols.GetColArray(5).max); // 1 based
+            Assert.AreEqual(14, cols.GetColArray(5).min); // 1 based
+            Assert.AreEqual(14, cols.GetColArray(5).max); // 1 based
+
         }
 
         /**
@@ -734,7 +694,7 @@ namespace NPOI.XSSF.UserModel
             XSSFSheet xs = sheet;
             CT_Worksheet cts = xs.GetCTWorksheet();
 
-            List<CT_Cols> cols_s = cts.GetColsArray();
+            List<CT_Cols> cols_s = cts.GetColsList();
             Assert.AreEqual(1, cols_s.Count);
             CT_Cols cols = cols_s[0];
             Assert.AreEqual(1, cols.sizeOfColArray());
@@ -749,7 +709,7 @@ namespace NPOI.XSSF.UserModel
             // Now Set another
             sheet.SetColumnWidth(3, 33 * 256);
 
-            cols_s = cts.GetColsArray();
+            cols_s = cts.GetColsList();
             Assert.AreEqual(1, cols_s.Count);
             cols = cols_s[0];
             Assert.AreEqual(2, cols.sizeOfColArray());
@@ -1116,6 +1076,8 @@ namespace NPOI.XSSF.UserModel
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = (XSSFSheet)workbook.CreateSheet("Sheet 1");
 
+            Assert.IsFalse(sheet.ForceFormulaRecalculation);
+
             // Set
             sheet.ForceFormulaRecalculation = (true);
             Assert.AreEqual(true, sheet.ForceFormulaRecalculation);
@@ -1137,7 +1099,7 @@ namespace NPOI.XSSF.UserModel
             Assert.AreEqual(false, sheet.ForceFormulaRecalculation);
         }
         [Test]
-        public void bug54607()
+        public void Bug54607()
         {
             // run with the file provided in the Bug-Report
             runGetTopRow("54607.xlsx", true, 1, 0, 0);
@@ -1171,12 +1133,21 @@ namespace NPOI.XSSF.UserModel
             }
 
             // for XSSF also test with SXSSF
-            //if(isXSSF) {
-            //    IWorkbook swb = new SXSSFWorkbook((XSSFWorkbook) wb);
-            //    for (int si = 0; si < swb.GetNumberOfSheets(); si++) {
-            //        ISheet sh = swb.GetSheetAt(si);
-            //        Assert.IsNotNull(sh.SheetName);
-            //        Assert.AreEqual("Did not match for sheet " + si, topRows[si], sh.GetTopRow());
+            //if (isXSSF)
+            //{
+            //    Workbook swb = new SXSSFWorkbook((XSSFWorkbook)wb);
+            //    try
+            //    {
+            //        for (int si = 0; si < swb.getNumberOfSheets(); si++)
+            //        {
+            //            Sheet sh = swb.getSheetAt(si);
+            //            assertNotNull(sh.getSheetName());
+            //            assertEquals("Did not match for sheet " + si, topRows[si], sh.getTopRow());
+            //        }
+            //    }
+            //    finally
+            //    {
+            //        swb.close();
             //    }
             //}
         }
@@ -1209,61 +1180,12 @@ namespace NPOI.XSSF.UserModel
             //        Assert.IsNotNull(sh.SheetName);
             //        Assert.AreEqual("Did not match for sheet " + si, topRows[si], sh.GetLeftCol());
             //    }
+            //    swb.Close();
             //}
         }
-        const int ROW_COUNT = 40000;
-        [Test]
-        public void showInPaneManyRowsBug55248()
-        {
-            XSSFWorkbook workbook = new XSSFWorkbook();
-            XSSFSheet sheet = (XSSFSheet)workbook.CreateSheet("Sheet 1");
-
-            sheet.ShowInPane(0, 0);
-
-            for (int i = ROW_COUNT / 2; i < ROW_COUNT; i++)
-            {
-                sheet.CreateRow(i);
-                sheet.ShowInPane(i, 0);
-                // this one fails: sheet.showInPane((short)i, 0);
-            }
-
-            int j = 0;
-            sheet.ShowInPane(j, j);
-
-            IWorkbook wb = XSSFTestDataSamples.WriteOutAndReadBack(workbook);
-            checkRowCount(wb);
-        }
-
-        //[Test]
-        //public void showInPaneManyRowsBug55248SXSSF() {
-        //    SXSSFWorkbook IWorkbook = new SXSSFWorkbook(new XSSFWorkbook());
-        //    SXSSFSheet sheet = (SXSSFSheet) IWorkbook.CreateSheet("ISheet 1");
-
-        //    sheet.showInPane(0, 0);
-
-        //    for(int i = ROW_COUNT/2;i < ROW_COUNT;i++) {
-        //        sheet.CreateRow(i);
-        //        sheet.showInPane(i, 0);
-        //        // this one fails: sheet.showInPane((short)i, 0);
-        //    }
-
-        //    int i = 0;
-        //    sheet.showInPane(i, i);
-
-        //    IWorkbook wb = SXSSFITestDataProvider.instance.writeOutAndReadBack(IWorkbook);
-        //    checkRowCount(wb);
-        //}
-
-        private void checkRowCount(IWorkbook wb)
-        {
-            Assert.IsNotNull(wb);
-            ISheet sh = wb.GetSheet("Sheet 1");
-            Assert.IsNotNull(sh);
-            Assert.AreEqual(ROW_COUNT - 1, sh.LastRowNum);
-        }
 
         [Test]
-        public void bug55745()
+        public void Bug55745()
         {
             XSSFWorkbook wb = XSSFTestDataSamples.OpenSampleWorkbook("55745.xlsx");
             XSSFSheet sheet = (XSSFSheet)wb.GetSheetAt(0);
@@ -1283,7 +1205,7 @@ namespace NPOI.XSSF.UserModel
         }
 
         [Test]
-        public void bug55723b()
+        public void Bug55723b()
         {
             XSSFWorkbook wb = new XSSFWorkbook();
             ISheet sheet = wb.CreateSheet();
@@ -1311,9 +1233,155 @@ namespace NPOI.XSSF.UserModel
         }
 
         [Test]
-        public void bug51585()
+        public void Bug51585()
         {
             XSSFTestDataSamples.OpenSampleWorkbook("51585.xlsx");
         }
+
+        private XSSFWorkbook SetupSheet()
+        {
+            //set up workbook
+            XSSFWorkbook wb = new XSSFWorkbook();
+            XSSFSheet sheet = wb.CreateSheet() as XSSFSheet;
+
+            IRow row1 = sheet.CreateRow((short)0);
+            ICell cell = row1.CreateCell((short)0);
+            cell.SetCellValue("Names");
+            ICell cell2 = row1.CreateCell((short)1);
+            cell2.SetCellValue("#");
+
+            IRow row2 = sheet.CreateRow((short)1);
+            ICell cell3 = row2.CreateCell((short)0);
+            cell3.SetCellValue("Jane");
+            ICell cell4 = row2.CreateCell((short)1);
+            cell4.SetCellValue(3);
+
+            IRow row3 = sheet.CreateRow((short)2);
+            ICell cell5 = row3.CreateCell((short)0);
+            cell5.SetCellValue("John");
+            ICell cell6 = row3.CreateCell((short)1);
+            cell6.SetCellValue(3);
+
+            return wb;
+        }
+
+        [Test]
+        public void TestCreateTwoPivotTablesInOneSheet()
+        {
+            XSSFWorkbook wb = SetupSheet();
+            XSSFSheet sheet = wb.GetSheetAt(0) as XSSFSheet;
+
+            Assert.IsNotNull(wb);
+            Assert.IsNotNull(sheet);
+            XSSFPivotTable pivotTable = sheet.CreatePivotTable(new AreaReference("A1:B2"), new CellReference("H5"));
+            Assert.IsNotNull(pivotTable);
+            Assert.IsTrue(wb.PivotTables.Count > 0);
+            XSSFPivotTable pivotTable2 = sheet.CreatePivotTable(new AreaReference("A1:B2"), new CellReference("L5"), sheet);
+            Assert.IsNotNull(pivotTable2);
+            Assert.IsTrue(wb.PivotTables.Count > 1);
+        }
+
+        [Test]
+        public void TestCreateTwoPivotTablesInTwoSheets()
+        {
+            XSSFWorkbook wb = SetupSheet();
+            XSSFSheet sheet = wb.GetSheetAt(0) as XSSFSheet;
+
+            Assert.IsNotNull(wb);
+            Assert.IsNotNull(sheet);
+            XSSFPivotTable pivotTable = sheet.CreatePivotTable(new AreaReference("A1:B2"), new CellReference("H5"));
+            Assert.IsNotNull(pivotTable);
+            Assert.IsTrue(wb.PivotTables.Count > 0);
+            Assert.IsNotNull(wb);
+            XSSFSheet sheet2 = wb.CreateSheet() as XSSFSheet;
+            XSSFPivotTable pivotTable2 = sheet2.CreatePivotTable(new AreaReference("A1:B2"), new CellReference("H5"), sheet);
+            Assert.IsNotNull(pivotTable2);
+            Assert.IsTrue(wb.PivotTables.Count > 1);
+        }
+
+        [Test]
+        public void TestCreatePivotTable()
+        {
+            XSSFWorkbook wb = SetupSheet();
+            XSSFSheet sheet = wb.GetSheetAt(0) as XSSFSheet;
+
+            Assert.IsNotNull(wb);
+            Assert.IsNotNull(sheet);
+            XSSFPivotTable pivotTable = sheet.CreatePivotTable(new AreaReference("A1:B2"), new CellReference("H5"));
+            Assert.IsNotNull(pivotTable);
+            Assert.IsTrue(wb.PivotTables.Count > 0);
+        }
+
+        [Test]
+        public void TestCreatePivotTableInOtherSheetThanDataSheet()
+        {
+            XSSFWorkbook wb = SetupSheet();
+            XSSFSheet sheet1 = wb.GetSheetAt(0) as XSSFSheet;
+            XSSFSheet sheet2 = wb.CreateSheet() as XSSFSheet;
+
+            XSSFPivotTable pivotTable = sheet2.CreatePivotTable
+                    (new AreaReference("A1:B2"), new CellReference("H5"), sheet1);
+            Assert.AreEqual(0, pivotTable.GetRowLabelColumns().Count);
+
+            Assert.AreEqual(1, wb.PivotTables.Count);
+            Assert.AreEqual(0, sheet1.GetPivotTables().Count);
+            Assert.AreEqual(1, sheet2.GetPivotTables().Count);
+        }
+
+        [Test]
+        public void TestCreatePivotTableInOtherSheetThanDataSheetUsingAreaReference()
+        {
+            XSSFWorkbook wb = SetupSheet();
+            XSSFSheet sheet = wb.GetSheetAt(0) as XSSFSheet;
+            XSSFSheet sheet2 = wb.CreateSheet() as XSSFSheet;
+
+            XSSFPivotTable pivotTable = sheet2.CreatePivotTable
+                    (new AreaReference(sheet.SheetName + "!A$1:B$2"), new CellReference("H5"));
+            Assert.AreEqual(0, pivotTable.GetRowLabelColumns().Count);
+        }
+
+        [Test]
+        public void TestCreatePivotTableWithConflictingDataSheets()
+        {
+            XSSFWorkbook wb = SetupSheet();
+            XSSFSheet sheet = wb.GetSheetAt(0) as XSSFSheet;
+            XSSFSheet sheet2 = wb.CreateSheet() as XSSFSheet;
+
+            try
+            {
+                sheet2.CreatePivotTable(new AreaReference(sheet.SheetName + "!A$1:B$2"), new CellReference("H5"), sheet2);
+            }
+            catch (ArgumentException)
+            {
+                return;
+            }
+            Assert.Fail();
+        }
+
+        [Test]
+        public void TestReadFails()
+        {
+            XSSFWorkbook wb = new XSSFWorkbook();
+            XSSFSheet sheet = wb.CreateSheet() as XSSFSheet;
+
+            try
+            {
+                sheet.OnDocumentRead();
+                Assert.Fail("Throws exception because we cannot read here");
+            }
+            catch (POIXMLException e)
+            {
+                // expected here
+            }
+        }
+
+        [Test]
+        public void TestCreateComment()
+        {
+            XSSFWorkbook wb = new XSSFWorkbook();
+            XSSFSheet sheet = wb.CreateSheet() as XSSFSheet;
+            Assert.IsNotNull(sheet.CreateComment());
+        }
+
     }
 }

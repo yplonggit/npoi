@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
-using NPOI.HSSF.UserModel;
 using System.IO;
+using System.Text;
+using NPOI.HSSF.UserModel;
 using NUnit.Framework;
-using NPOI.SS.Converter;
+using TestCases;
 
-namespace TestCases.SS.Converter
+namespace NPOI.SS.Converter
 {
     [TestFixture]
     public class TestExcelToHtmlConverterSuite
@@ -14,7 +14,7 @@ namespace TestCases.SS.Converter
         private static List<String> failingFiles = new List<string>();
 
         [Test]
-        [Ignore]
+        [Ignore("test")]
         public void TestExcelToHtmlConverter()
         {
             string[] fileNames = POIDataSamples.GetSpreadSheetInstance().GetFiles("*.xls");

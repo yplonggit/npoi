@@ -28,22 +28,37 @@ namespace NPOI.SS.UserModel
     {
         private static int NEXT_ID = 1;
         public int id;
+        public Policy _policy;
         public MissingCellPolicy()
         {
             this.id = NEXT_ID++;
         }
+
+        public MissingCellPolicy(Policy policy)
+        {
+            this.id = NEXT_ID++;
+            _policy = policy;
+
+        }
         /// <summary>Missing cells are returned as null, Blank cells are returned as normal</summary>
-        public static readonly MissingCellPolicy RETURN_NULL_AND_BLANK = new MissingCellPolicy();
+        public static readonly MissingCellPolicy RETURN_NULL_AND_BLANK = new MissingCellPolicy(Policy.RETURN_NULL_AND_BLANK);
         /// <summary>Missing cells are returned as null, as are blank cells</summary>
-        public static readonly MissingCellPolicy RETURN_BLANK_AS_NULL = new MissingCellPolicy();
+        public static readonly MissingCellPolicy RETURN_BLANK_AS_NULL = new MissingCellPolicy(Policy.RETURN_BLANK_AS_NULL);
         /// <summary>A new, blank cell is Created for missing cells. Blank cells are returned as normal</summary>
-        public static readonly MissingCellPolicy CREATE_NULL_AS_BLANK = new MissingCellPolicy();
+        public static readonly MissingCellPolicy CREATE_NULL_AS_BLANK = new MissingCellPolicy(Policy.CREATE_NULL_AS_BLANK);
+
+        public enum Policy
+        {
+            RETURN_NULL_AND_BLANK = 1,
+            RETURN_BLANK_AS_NULL = 2,
+            CREATE_NULL_AS_BLANK = 3
+        }
     }
 
     /// <summary>
     /// High level representation of a row of a spreadsheet.
     /// </summary>    
-    public interface IRow
+    public interface IRow : IEnumerable<ICell>
     {
         /// <summary>
         /// Use this to create new cells within the row and return it.
@@ -171,11 +186,6 @@ namespace NPOI.SS.UserModel
         /// can get the formatting from <see cref="RowStyle"/>
         /// </summary>
         bool IsFormatted { get; }
-        /// <summary>
-        /// Cell iterator of the physically defined cells.  Note element 4 may
-        /// actually be row cell depending on how many are defined!
-        /// </summary>
-        IEnumerator GetEnumerator();
 
         /// <summary>
         /// Returns the Sheet this row belongs to
@@ -214,6 +224,19 @@ namespace NPOI.SS.UserModel
         /// Get cells in the row
         /// </summary>
         List<ICell> Cells { get; }
+
+        /// <summary>
+        /// Returns the rows outline level. Increased as you
+        /// put it into more groups (outlines), reduced as
+        /// you take it out of them.
+        /// </summary>
+        int OutlineLevel { get; }
+
+        bool HasCustomHeight();
+
+        bool? Hidden { get; set; }
+
+        bool? Collapsed { get; set; }
     }
 }
 

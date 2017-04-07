@@ -148,6 +148,11 @@ namespace NPOI.XSSF.UserModel
                         // Create a new Xf with the same contents
                         _cellXf =
                               src.GetCoreXf().Copy();
+
+                        // bug 56295: ensure that the fills is available and set correctly
+                        CT_Fill fill = CT_Fill.Parse(src.GetCTFill().ToString());
+                        AddFill(fill);
+
                         // Swap it over
                         _stylesSource.ReplaceCellXfAt(_cellXfId, _cellXf);
                     }
@@ -186,7 +191,13 @@ namespace NPOI.XSSF.UserModel
                 throw new ArgumentException("Can only clone from one XSSFCellStyle to another, not between HSSFCellStyle and XSSFCellStyle");
             }
         }
+        private void AddFill(CT_Fill fill)
+        {
+            int idx = _stylesSource.PutFill(new XSSFCellFill(fill));
 
+            _cellXf.fillId = (uint)(idx);
+            _cellXf.applyFill = (true);
+        }
         public HorizontalAlignment Alignment
         {
             get
@@ -234,8 +245,10 @@ namespace NPOI.XSSF.UserModel
             {
                 CT_Border ct = GetCTBorder();
                 CT_BorderPr pr = ct.IsSetBottom() ? ct.bottom : ct.AddNewBottom();
-                if (value == BorderStyle.None) ct.unsetBottom();
-                else pr.style = (ST_BorderStyle)value;
+                if (value == BorderStyle.None) 
+                    ct.UnsetBottom();
+                else 
+                    pr.style = (ST_BorderStyle)value;
 
                 int idx = _stylesSource.PutBorder(new XSSFCellBorder(ct, _theme));
 
@@ -394,11 +407,20 @@ namespace NPOI.XSSF.UserModel
             }
             set
             {
-                _cellXf.applyNumberFormat = (true);
-                _cellXf.numFmtId = (uint)value;
+                // XSSF supports >32,767 formats
+                SetDataFormat(value & 0xFFFF);
             }
         }
-
+        /**
+         * Set the index of a data format
+         *
+         * @param fmt the index of a data format
+         */
+            public void SetDataFormat(int fmt)
+            {
+                _cellXf.applyNumberFormat = (true);
+                _cellXf.numFmtId = (uint)(fmt);
+            }
         /**
          * Get the contents of the format string, by looking up
          * the StylesSource
@@ -454,7 +476,8 @@ namespace NPOI.XSSF.UserModel
         {
             get
             {
-                if (!_cellXf.applyFill) return null;
+                // bug 56295: handle missing applyFill attribute as "true" because Excel does as well
+                if (_cellXf.IsSetApplyFill() && !_cellXf.applyFill) return null;
 
                 int fillIndex = (int)_cellXf.fillId;
                 XSSFCellFill fg = _stylesSource.GetFillAt(fillIndex);
@@ -480,10 +503,7 @@ namespace NPOI.XSSF.UserModel
                     ptrn.bgColor = (value.GetCTColor());
                 }
 
-                int idx = _stylesSource.PutFill(new XSSFCellFill(ct));
-
-                _cellXf.fillId = (uint)(idx);
-                _cellXf.applyFill = (true);
+                AddFill(ct);
             }
         }
         /**
@@ -532,7 +552,8 @@ namespace NPOI.XSSF.UserModel
         {
             get
             {
-                if (!_cellXf.applyFill) return null;
+                // bug 56295: handle missing applyFill attribute as "true" because Excel does as well
+                if (_cellXf.IsSetApplyFill() && !_cellXf.applyFill) return null;
 
                 int fillIndex = (int)_cellXf.fillId;
                 XSSFCellFill fg = _stylesSource.GetFillAt(fillIndex);
@@ -559,23 +580,23 @@ namespace NPOI.XSSF.UserModel
                     ptrn.fgColor = (value.GetCTColor());
                 }
 
-                int idx = _stylesSource.PutFill(new XSSFCellFill(ct));
-
-                _cellXf.fillId = (uint)(idx);
-                _cellXf.applyFill = (true);
+                AddFill(ct);
             }
         }
         public FillPattern FillPattern
         {
             get
             {
-                if (!_cellXf.applyFill) return 0;
+                // bug 56295: handle missing applyFill attribute as "true" because Excel does as well
+                if (_cellXf.IsSetApplyFill() && !_cellXf.applyFill) return 0;
 
                 int FillIndex = (int)_cellXf.fillId;
                 XSSFCellFill fill = _stylesSource.GetFillAt(FillIndex);
 
                 ST_PatternType ptrn = fill.GetPatternType();
-                return (FillPattern)ptrn;
+                if(ptrn == ST_PatternType.none) return FillPattern.NoFill;
+
+                return (FillPattern)((int)ptrn);
             }
             set
             {
@@ -583,12 +604,9 @@ namespace NPOI.XSSF.UserModel
                 CT_PatternFill ptrn = ct.IsSetPatternFill() ? ct.GetPatternFill() : ct.AddNewPatternFill();
                 if (value == FillPattern.NoFill && ptrn.IsSetPatternType())
                     ptrn.UnsetPatternType();
-                else ptrn.patternType = (ST_PatternType)value;
+                else ptrn.patternType = (ST_PatternType)(value);
 
-                int idx = _stylesSource.PutFill(new XSSFCellFill(ct));
-
-                _cellXf.fillId = (uint)idx;
-                _cellXf.applyFill = (true);
+                AddFill(ct);
             }
         }
 
@@ -675,7 +693,13 @@ namespace NPOI.XSSF.UserModel
                 return (short)this._cellXfId;
             }
         }
-
+        protected internal int UIndex
+        {
+            get
+            {
+                return this._cellXfId;
+            }
+        }
         /**
          * Get the color to use for the left border
          *
@@ -986,7 +1010,8 @@ namespace NPOI.XSSF.UserModel
         public CT_Fill GetCTFill()
         {
             CT_Fill ct;
-            if (_cellXf.applyFill)
+            // bug 56295: handle missing applyFill attribute as "true" because Excel does as well
+            if (!_cellXf.IsSetApplyFill() || _cellXf.applyFill)
             {
                 int FillIndex = (int)_cellXf.fillId;
                 XSSFCellFill cf = _stylesSource.GetFillAt(FillIndex);

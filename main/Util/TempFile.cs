@@ -7,8 +7,8 @@ namespace NPOI.Util
 
     public class TempFile
     {
-        
 
+        private static string dir;
         /**
          * Creates a temporary file.  Files are collected into one directory and by default are
          * deleted on exit from the VM.  Files can be kept by defining the system property
@@ -18,14 +18,21 @@ namespace NPOI.Util
          */
         public static FileInfo CreateTempFile(String prefix, String suffix)
         {
-            
-            //if (dir == null)
-            //{
-            //    dir = Directory.CreateDirectory(Path.GetTempPath()+@"\poifiles");               
-            //}
+
+            if (dir == null)
+            {
+                dir = Directory.CreateDirectory(Path.GetTempPath() + @"\poifiles").FullName;
+            }
+            // Generate a unique new filename 
             Random rnd = new Random(DateTime.Now.Millisecond);
-            string file=prefix + rnd.Next() + suffix;
-            FileStream newFile = File.Create(file);
+            Thread.Sleep(1);
+            string file= dir + "\\" + prefix + rnd.Next() + suffix;
+            while (File.Exists(file))
+            {
+                file = dir + "\\" + prefix + rnd.Next() + suffix;
+                Thread.Sleep(1);
+            }
+            FileStream newFile = new FileStream(file, FileMode.CreateNew, FileAccess.ReadWrite);
             newFile.Close();
 
             return new FileInfo(file);
@@ -33,10 +40,10 @@ namespace NPOI.Util
 
         public static string GetTempFilePath(String prefix, String suffix)
         {
-            //if (dir == null)
-            //{
-            //    dir = Directory.CreateDirectory(Path.GetTempPath() + @"\poifiles");
-            //}
+            if (dir == null)
+            {
+                dir = Directory.CreateDirectory(Path.GetTempPath() + @"\poifiles").FullName;
+            }
             Random rnd = new Random(DateTime.Now.Millisecond);
             Thread.Sleep(10);
             return prefix + rnd.Next() + suffix;
